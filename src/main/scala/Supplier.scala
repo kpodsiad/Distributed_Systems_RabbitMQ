@@ -24,9 +24,10 @@ object Supplier {
             println(s"[Admin]: ${new String(body, "UTF-8")}")
           case _ =>
             val message = new String(body, "UTF-8")
+            val teamName = message.split("#")(1)
             println(s"Received: $message, processing it as a ${orderID}_$message")
             channel.basicAck(envelope.getDeliveryTag, false)
-            //        channel.basicPublish(ExchangeName, "", null, message.getBytes("UTF-8"))
+            channel.basicPublish(exchangeName, teamName, null, s"$message was processed".getBytes("UTF-8"))
             orderID += 1
         }
     }

@@ -1,5 +1,7 @@
 package com.kpodsiad
 
+import com.rabbitmq.client.{AMQP, DefaultConsumer, Envelope}
+
 import java.io.{BufferedReader, InputStreamReader}
 import scala.annotation.tailrec
 
@@ -12,6 +14,14 @@ object Team {
 
     val teamName = args(0)
     val (channel, exchangeName) = Utils.getChannel
+    channel.queueDeclare(teamName, false, false, false, null)
+    channel.queueBind(teamName, exchangeName, teamName)
+    val consumer: DefaultConsumer = new DefaultConsumer(channel) {
+      override def handleDelivery(consumerTag: String, envelope: Envelope, properties: AMQP.BasicProperties, body: Array[Byte]): Unit = {
+        println(new String(body, "UTF-8"))
+      }
+    }
+    channel.basicConsume(teamName, consumer)
     loop()
 
     @tailrec
@@ -21,17 +31,17 @@ object Team {
       br.readLine match {
         case null | "exit" =>
           ()
-        case other if Utils.availableItems.contains(other) =>
-          publishOrder(other)
+        case item if Utils.availableItems.contains(item) =>
+          publishOrder(item)
           loop()
-        case other =>
+        case _ =>
           println(s"Invalid item name. Type one of following: ${Utils.availableItems.mkString(", ")}")
           loop()
       }
     }
 
     def publishOrder(itemToOrder: String): Unit = {
-      val message = s"${itemToOrder}_$teamName"
+      val message = s"$itemToOrder#$teamName"
       channel.basicPublish(exchangeName, itemToOrder, null, message.getBytes("UTF-8"))
       println("Sent: " + message)
     }
