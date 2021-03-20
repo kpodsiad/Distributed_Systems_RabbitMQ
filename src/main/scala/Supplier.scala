@@ -8,7 +8,8 @@ object Supplier {
   def main(args: Array[String]): Unit = {
     val (channel, exchangeName) = Utils.getChannel
 
-    val arguments = args.toList.filter(Utils.availableItems.contains) ::: List("admin")
+    val supplierName = args.toList.head
+    val arguments = args.toList.drop(1).filter(Utils.availableItems.contains)
     arguments.foreach { queueName =>
       channel.queueDeclare(queueName, false, false, false, null)
       channel.queueBind(queueName, exchangeName, queueName)
@@ -27,12 +28,16 @@ object Supplier {
             val teamName = message.split("#")(1)
             println(s"Received: $message, processing it as a ${orderID}_$message")
             channel.basicAck(envelope.getDeliveryTag, false)
-            channel.basicPublish(exchangeName, teamName, null, s"$message was processed".getBytes("UTF-8"))
+            channel.basicPublish(exchangeName, teamName, null, s"$message was processed by $supplierName".getBytes("UTF-8"))
             orderID += 1
         }
     }
 
     println("Waiting for orders...")
     arguments.foreach(channel.basicConsume(_, false, consumer))
+
+    val administrationQueue = channel.queueDeclare.getQueue
+    channel.queueBind(administrationQueue, exchangeName, Utils.supplierAdministrationKey)
+    channel.basicConsume(administrationQueue, false, Utils.printingConsumer(channel))
   }
 }

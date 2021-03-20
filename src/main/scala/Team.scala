@@ -16,21 +16,20 @@ object Team {
     val (channel, exchangeName) = Utils.getChannel
     channel.queueDeclare(teamName, false, false, false, null)
     channel.queueBind(teamName, exchangeName, teamName)
-    val consumer: DefaultConsumer = new DefaultConsumer(channel) {
-      override def handleDelivery(consumerTag: String, envelope: Envelope, properties: AMQP.BasicProperties, body: Array[Byte]): Unit = {
-        println(new String(body, "UTF-8"))
-      }
-    }
-    channel.basicConsume(teamName, consumer)
+    channel.basicConsume(teamName, Utils.printingConsumer(channel))
+
+    val administrationQueue = channel.queueDeclare.getQueue
+    channel.queueBind(administrationQueue, exchangeName, Utils.teamAdministrationKey)
+    channel.basicConsume(administrationQueue, false, Utils.printingConsumer(channel))
+
     loop()
 
     @tailrec
     def loop(): Unit = {
       val br = new BufferedReader(new InputStreamReader(System.in))
-      print("Enter order: ")
+      print("Enter order: \n")
       br.readLine match {
-        case null | "exit" =>
-          ()
+        case null | "exit" => ()
         case item if Utils.availableItems.contains(item) =>
           publishOrder(item)
           loop()
