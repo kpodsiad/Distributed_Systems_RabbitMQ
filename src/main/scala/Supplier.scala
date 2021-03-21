@@ -35,9 +35,8 @@ object Supplier {
 
     println("Waiting for orders...")
     arguments.foreach(channel.basicConsume(_, false, consumer))
-
     val administrationQueue = channel.queueDeclare.getQueue
     channel.queueBind(administrationQueue, exchangeName, Utils.supplierAdministrationKey)
-    channel.basicConsume(administrationQueue, false, Utils.printingConsumer(channel))
+    channel.basicConsume(administrationQueue, true, Utils.printingConsumer(channel))
   }
 }

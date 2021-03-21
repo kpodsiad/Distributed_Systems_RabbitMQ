@@ -1,7 +1,5 @@
 package com.kpodsiad
 
-import com.rabbitmq.client.{AMQP, DefaultConsumer, Envelope}
-
 import java.io.{BufferedReader, InputStreamReader}
 import scala.annotation.tailrec
 
@@ -16,11 +14,11 @@ object Team {
     val (channel, exchangeName) = Utils.getChannel
     channel.queueDeclare(teamName, false, false, false, null)
     channel.queueBind(teamName, exchangeName, teamName)
-    channel.basicConsume(teamName, Utils.printingConsumer(channel))
+    channel.basicConsume(teamName, true, Utils.printingConsumer(channel))
 
     val administrationQueue = channel.queueDeclare.getQueue
     channel.queueBind(administrationQueue, exchangeName, Utils.teamAdministrationKey)
-    channel.basicConsume(administrationQueue, false, Utils.printingConsumer(channel))
+    channel.basicConsume(administrationQueue, true, Utils.printingConsumer(channel))
 
     loop()
 

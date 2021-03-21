@@ -4,8 +4,8 @@ import com.rabbitmq.client.{AMQP, BuiltinExchangeType, Channel, ConnectionFactor
 
 object Utils {
   val availableItems = Set("boots", "oxygen", "backpack")
-  val teamAdministrationKey = "teamAdminQueue"
-  val supplierAdministrationKey = "supplierAdminQueue"
+  val teamAdministrationKey = "adminTeam"
+  val supplierAdministrationKey = "adminSupplier"
 
   private val ExchangeName = "supply_chain"
   private val factory = new ConnectionFactory

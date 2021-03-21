@@ -19,6 +19,7 @@ object Admin extends App {
   }
   channel.basicConsume(queueName, consumer)
 
+  private val modes = Set("S", "T", "A")
   private var mode = "A"
   loop()
 
@@ -28,9 +29,7 @@ object Admin extends App {
     print("Enter mode or message: \n")
     br.readLine match {
       case null | "exit" => ()
-      case "S" => mode = "S"; loop()
-      case "T" => mode = "T"; loop()
-      case "A" => mode = "A"; loop()
+      case maybeMode if modes contains maybeMode => mode = maybeMode; println(s"Changed mode to $mode"); loop()
       case other => sendMessage(other); loop()
     }
   }
